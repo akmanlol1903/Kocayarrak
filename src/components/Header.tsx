@@ -193,7 +193,7 @@ const Header: React.FC<HeaderProps> = ({ onViewChange, searchTerm, setSearchTerm
                                     className="relative group cursor-pointer overflow-hidden border-b border-gray-700 last:border-b-0"
                                 >
                                     <div className="absolute bottom-0 left-0 w-full h-0 bg-black group-hover:h-full transition-all duration-300 ease-in-out z-0"></div>
-                                    <div className="relative z-10 flex justify-between items-center p-3 gap-3">
+                                    <div className="relative z-10 flex justify-between items-center py-3 px-0 gap-3 transition-all duration-300 ease-in-out group-hover:px-4">
                                         <div className="flex-shrink-0 w-[100px] flex items-center justify-center bg-slate-900 overflow-hidden">
                                             <img 
                                                 src={getSearchResultImage(game)} 
@@ -205,9 +205,6 @@ const Header: React.FC<HeaderProps> = ({ onViewChange, searchTerm, setSearchTerm
                                         <div className="flex-grow min-w-0">
                                             <p className="font-bold text-sm text-white truncate transition-colors">
                                                 {game.title.toUpperCase()}
-                                            </p>
-                                            <p className="text-[10px] text-gray-400 group-hover:text-white transition-colors">
-                                                {game.category.toUpperCase()}
                                             </p>
                                         </div>
                                         <ArrowUpRight className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors flex-shrink-0" />
@@ -222,7 +219,7 @@ const Header: React.FC<HeaderProps> = ({ onViewChange, searchTerm, setSearchTerm
   
                 {isMenuOpen && (
                   <div className="h-full flex flex-col justify-center items-center">
-                    <nav className="flex flex-col items-center space-y-3 text-center">
+                    <nav className="flex flex-col items-center text-center">
                       {navItems.map(item => {
                         if (item.requiredAuth && !user) return null;
                         if (item.requiredAdmin && !isAdmin) return null;
@@ -230,18 +227,18 @@ const Header: React.FC<HeaderProps> = ({ onViewChange, searchTerm, setSearchTerm
                           <button
                             key={item.view}
                             onClick={() => handleNavClick(item.view)}
-                            className="text-2xl font-black text-gray-300 hover:text-white transition-colors uppercase"
+                            className="h-[35px] flex items-center justify-center text-2xl font-black text-gray-300 hover:text-white transition-colors uppercase"
                           >
                             {item.label}
                           </button>
                         );
                       })}
                       {user ? (
-                        <button onClick={handleSignOut} className="text-2xl font-black text-red-400 hover:text-red-300 transition-colors uppercase">Sign Out</button>
+                        <button onClick={handleSignOut} className="h-[35px] flex items-center justify-center text-2xl font-black text-red-400 hover:text-red-300 transition-colors uppercase">Sign Out</button>
                       ) : (
                         <>
-                          <button onClick={() => handleNavClick('login')} className="text-2xl font-black text-gray-300 hover:text-white transition-colors uppercase">Login</button>
-                          <button onClick={() => handleNavClick('register')} className="text-2xl font-black text-gray-300 hover:text-white transition-colors uppercase">Sign Up</button>
+                          <button onClick={() => handleNavClick('login')} className="h-[35px] flex items-center justify-center text-2xl font-black text-gray-300 hover:text-white transition-colors uppercase">Login</button>
+                          <button onClick={() => handleNavClick('register')} className="h-[35px] flex items-center justify-center text-2xl font-black text-gray-300 hover:text-white transition-colors uppercase">Sign Up</button>
                         </>
                       )}
                     </nav>

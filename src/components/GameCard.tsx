@@ -18,7 +18,6 @@ interface Game {
   steam_appid: number | null;
 }
 
-// GÜNCELLENDİ: Tooltip veri yapısı
 interface TooltipData {
   title: string;
   developer: string;
@@ -39,7 +38,6 @@ const GameCard: React.FC<GameCardProps> = ({ game, onViewDetails, onShowTooltip,
     const developerText = game.developer?.join(', ') || '';
     const publisherText = game.publisher?.join(', ') || '';
     
-    // Eğer ikisi de boşsa, yükleyenin adını göster
     if (!developerText && !publisherText) {
         onShowTooltip({ 
             title: game.title, 
@@ -55,9 +53,11 @@ const GameCard: React.FC<GameCardProps> = ({ game, onViewDetails, onShowTooltip,
     }
   };
 
+  // Kenarlıklar ve boyutlandırma artık üst component (GameList) tarafından yönetiliyor.
+  // GameCard sadece içeriği (resim ve etkileşimleri) yönetir ve ebeveynini doldurur.
   return (
     <div
-      className="relative group bg-slate-900 border-t border-l border-slate-700 flex items-center justify-center p-4 sm:p-8 cursor-pointer aspect-square hover:bg-slate-800 transition-colors duration-300"
+      className="w-full h-full flex items-center justify-center p-4 sm:p-8 cursor-pointer hover:bg-slate-800 transition-colors duration-300"
       onClick={() => onViewDetails(game.id)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={onHideTooltip}
