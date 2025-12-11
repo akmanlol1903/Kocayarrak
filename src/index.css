@@ -1,0 +1,28 @@
+/* "wght@" kısmına ;900 eklenerek Black font ağırlığı dahil edildi. */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Opsiyonel: Tüm siteye daha pürüzsüz bir font render'ı sağlamak için */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar'ı tüm sitede gizlemek için */
+/* Chrome, Safari, Opera ve Edge için */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Firefox için */
+* {
+  scrollbar-width: none;
+}
+
+/* IE için (eski versiyonlar) */
+body {
+  -ms-overflow-style: none;
+}
