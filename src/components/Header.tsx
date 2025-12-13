@@ -45,13 +45,15 @@ const Header: React.FC<HeaderProps> = ({ onViewChange, searchTerm, setSearchTerm
       const term = e.target.value;
       setSearchTerm(term);
   
-      if (term.trim().length > 1) {
+      // GÜNCELLEME: > 1 yerine > 0 yapıldı. Artık tek harfle de arama çalışır.
+      if (term.trim().length > 0) {
           setIsSearching(true);
           try {
+              // .or() sorgusu: Başlık aranan kelimeyle başlıyorsa YA DA kelime içinde boşluktan sonra geliyorsa
               const { data, error } = await supabase
                   .from('games')
                   .select('id, title, category, steam_appid, image_url')
-                  .ilike('title', `%${term}%`)
+                  .or(`title.ilike.${term}%,title.ilike.% ${term}%`)
                   .limit(5);
   
               if (error) throw error;
@@ -175,7 +177,7 @@ const Header: React.FC<HeaderProps> = ({ onViewChange, searchTerm, setSearchTerm
                         />
                       </form>
                       
-                      {(isSearching || searchResults.length > 0 || (searchTerm.length > 1 && !isSearching)) && (
+                      {(isSearching || searchResults.length > 0 || (searchTerm.length > 0 && !isSearching)) && (
                         <hr className="border-t border-gray-700 flex-shrink-0" />
                       )}
   

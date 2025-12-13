@@ -116,7 +116,7 @@ function AppContent() {
         {currentView === 'home' && (
           <GameList 
               onGameSelect={handleGameSelect} 
-              searchTerm={searchTerm} 
+              // searchTerm={searchTerm} satırı kaldırıldı
               onShowTooltip={handleShowTooltip}
               onHideTooltip={handleHideTooltip}
               onUpdateTooltipPosition={handleUpdateTooltipPosition}

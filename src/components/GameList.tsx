@@ -28,7 +28,7 @@ interface TooltipData {
 
 interface GameListProps {
   onGameSelect: (gameId: string) => void;
-  searchTerm: string;
+  // searchTerm prop'u buradan kaldırıldı
   onShowTooltip: (data: TooltipData, e: React.MouseEvent) => void;
   onHideTooltip: () => void;
   onUpdateTooltipPosition: (e: React.MouseEvent) => void;
@@ -36,7 +36,7 @@ interface GameListProps {
 
 const GameList: React.FC<GameListProps> = ({ 
     onGameSelect, 
-    searchTerm, 
+    // searchTerm parametresi buradan kaldırıldı
     onShowTooltip, 
     onHideTooltip, 
     onUpdateTooltipPosition 
@@ -69,10 +69,7 @@ const GameList: React.FC<GameListProps> = ({
     }
   };
 
-  const filteredGames = games.filter(game =>
-    game.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    game.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // filteredGames mantığı kaldırıldı, doğrudan games state'i kullanılıyor.
 
   if (loading) {
     return (
@@ -82,15 +79,15 @@ const GameList: React.FC<GameListProps> = ({
     );
   }
 
-  // Minimum 12 slot mantığı: Eğer oyun sayısı 12'den azsa 12'ye tamamla, fazlaysa oyun sayısı kadar slot oluştur.
+  // Minimum 12 slot mantığı: Artık filteredGames yerine direkt games kullanılıyor.
   const MIN_SLOTS = 12;
-  const totalSlots = Math.max(filteredGames.length, MIN_SLOTS);
+  const totalSlots = Math.max(games.length, MIN_SLOTS);
   // Slot dizisini oluştur (Oyun varsa oyunu koy, yoksa null koy)
-  const slots = [...filteredGames, ...Array(Math.max(0, totalSlots - filteredGames.length)).fill(null)];
+  const slots = [...games, ...Array(Math.max(0, totalSlots - games.length)).fill(null)];
 
   return (
     <div>
-      {/* Grid yapısı ve kenarlıklar burada tanımlanıyor */}
+      {/* Grid yapısı ve kenarlıklar */}
       <div className="grid grid-cols-2 md:grid-cols-4 border-r border-b border-slate-700">
         {slots.map((game, index) => (
           <div
@@ -113,13 +110,6 @@ const GameList: React.FC<GameListProps> = ({
           </div>
         ))}
       </div>
-      
-      {/* Eğer hiç oyun bulunamadıysa ve arama yapılıyorsa mesaj göster (ancak gridler hala görünür) */}
-      {filteredGames.length === 0 && searchTerm && (
-        <div className="text-center py-12">
-          <div className="text-gray-400 text-lg">No games found matching "{searchTerm}"</div>
-        </div>
-      )}
     </div>
   );
 };
