@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, LogOut, Shield, Home, Upload, Search, Menu, X, ArrowUpRight } from 'lucide-react';
+import { User, LogOut, Shield, Home, Upload, Search, Menu, X, ArrowUpRight, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -27,11 +27,34 @@ const Header: React.FC<HeaderProps> = ({ onViewChange, searchTerm, setSearchTerm
     
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
     const [isSearching, setIsSearching] = useState(false);
+    
+    // Kaydırma durumunu takip etmek için state
+    const [isScrolled, setIsScrolled] = useState(false);
   
     // Dinamik yükseklik için referanslar
     const searchContentRef = useRef<HTMLDivElement>(null);
     const [contentHeight, setContentHeight] = useState(0);
+
+    // Arka planın kaydırılmasını engelleme (Body Scroll Lock)
+    useEffect(() => {
+        if (isSearchOpen || isMenuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isSearchOpen, isMenuOpen]);
   
+    // Sonuçlar değiştiğinde scroll durumunu sıfırla
+    useEffect(() => {
+        setIsScrolled(false);
+        const scrollContainer = document.getElementById('search-results-container');
+        if (scrollContainer) scrollContainer.scrollTop = 0;
+    }, [searchResults, isSearchOpen]);
+
     useEffect(() => {
       if (isSearchOpen && searchContentRef.current) {
         setContentHeight(searchContentRef.current.scrollHeight);
@@ -40,21 +63,29 @@ const Header: React.FC<HeaderProps> = ({ onViewChange, searchTerm, setSearchTerm
       }
     }, [isSearchOpen, searchResults, isSearching]);
   
+    // Scroll olayını dinleyen fonksiyon
+    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        const scrollTop = e.currentTarget.scrollTop;
+        // Biraz tolerans (5px)
+        if (scrollTop > 5) {
+            setIsScrolled(true);
+        } else {
+            setIsScrolled(false);
+        }
+    };
   
     const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const term = e.target.value;
       setSearchTerm(term);
   
-      // GÜNCELLEME: > 1 yerine > 0 yapıldı. Artık tek harfle de arama çalışır.
       if (term.trim().length > 0) {
           setIsSearching(true);
           try {
-              // .or() sorgusu: Başlık aranan kelimeyle başlıyorsa YA DA kelime içinde boşluktan sonra geliyorsa
               const { data, error } = await supabase
                   .from('games')
                   .select('id, title, category, steam_appid, image_url')
                   .or(`title.ilike.${term}%,title.ilike.% ${term}%`)
-                  .limit(5);
+                  .limit(20);
   
               if (error) throw error;
               setSearchResults(data || []);
@@ -181,39 +212,54 @@ const Header: React.FC<HeaderProps> = ({ onViewChange, searchTerm, setSearchTerm
                         <hr className="border-t border-gray-700 flex-shrink-0" />
                       )}
   
-                      <div className="overflow-y-auto">
-                        <ul className="flex flex-col">
-                            {searchResults.map((game) => (
-                                <li
-                                    key={game.id}
-                                    onClick={() => {
-                                        onGameSelect(game.id);
-                                        setIsSearchOpen(false);
-                                        setSearchTerm('');
-                                        setSearchResults([]);
-                                    }}
-                                    className="relative group cursor-pointer overflow-hidden border-b border-gray-700 last:border-b-0"
-                                >
-                                    <div className="absolute bottom-0 left-0 w-full h-0 bg-black group-hover:h-full transition-all duration-300 ease-in-out z-0"></div>
-                                    <div className="relative z-10 flex justify-between items-center py-3 px-0 gap-3 transition-all duration-300 ease-in-out group-hover:px-4">
-                                        <div className="flex-shrink-0 w-[100px] flex items-center justify-center bg-slate-900 overflow-hidden">
-                                            <img 
-                                                src={getSearchResultImage(game)} 
-                                                alt={game.title}
-                                                className="w-full h-auto"
-                                            />
+                      <div className="relative">
+                          <div 
+                            id="search-results-container"
+                            className="overflow-y-auto max-h-[252px] scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent pr-2 snap-y snap-mandatory"
+                            onScroll={handleScroll}
+                          >
+                            <ul className="flex flex-col pb-1">
+                                {searchResults.map((game) => (
+                                    <li
+                                        key={game.id}
+                                        onClick={() => {
+                                            onGameSelect(game.id);
+                                            setIsSearchOpen(false);
+                                            setSearchTerm('');
+                                            setSearchResults([]);
+                                        }}
+                                        style={{ scrollSnapStop: 'always' }}
+                                        className="relative group cursor-pointer overflow-hidden border-b border-gray-700 last:border-b-0 snap-start"
+                                    >
+                                        <div className="absolute bottom-0 left-0 w-full h-0 bg-black group-hover:h-full transition-all duration-300 ease-in-out z-0"></div>
+                                        <div className="relative z-10 flex justify-between items-center py-3 px-0 gap-3 transition-all duration-300 ease-in-out group-hover:px-4">
+                                            <div className="flex-shrink-0 w-[100px] flex items-center justify-center bg-slate-900 overflow-hidden">
+                                                <img 
+                                                    src={getSearchResultImage(game)} 
+                                                    alt={game.title}
+                                                    className="w-full h-auto"
+                                                />
+                                            </div>
+                                            
+                                            <div className="flex-grow min-w-0">
+                                                <p className="font-bold text-sm text-white truncate transition-colors">
+                                                    {game.title.toUpperCase()}
+                                                </p>
+                                            </div>
+                                            <ArrowUpRight className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors flex-shrink-0" />
                                         </div>
-                                        
-                                        <div className="flex-grow min-w-0">
-                                            <p className="font-bold text-sm text-white truncate transition-colors">
-                                                {game.title.toUpperCase()}
-                                            </p>
-                                        </div>
-                                        <ArrowUpRight className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors flex-shrink-0" />
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
+                                    </li>
+                                ))}
+                            </ul>
+                          </div>
+
+                          {/* Ok İşareti */}
+                          {searchResults.length > 4 && !isScrolled && (
+                            // GÜNCELLEME: 'bottom-0' yerine '-bottom-3' kullanıldı ve 'pb-1' kaldırıldı.
+                            <div className="absolute -bottom-3 left-0 w-full flex justify-center items-end pointer-events-none z-20">
+                                <ChevronDown className="h-6 w-6 animate-bounce text-gray-200 drop-shadow-lg" />
+                            </div>
+                          )}
                       </div>
                     </div>
                   </div>
