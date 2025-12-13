@@ -178,7 +178,7 @@ const GameDetails: React.FC<{ gameId: string; onBack: () => void; }> = ({ gameId
 
   return (
     <div className="bg-slate-900 text-white min-h-screen">
-        <div className="lg:grid lg:grid-cols-[1fr_480px]">
+        <div className="lg:grid lg:grid-cols-[1fr_640px]">
             {/* Sol Sütun (Ekran Görüntüleri) */}
             <div className="relative lg:h-screen bg-black">
                 {hasScreenshots ? (

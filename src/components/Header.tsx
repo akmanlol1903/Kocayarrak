@@ -123,7 +123,7 @@ const Header: React.FC<HeaderProps> = ({ onViewChange, searchTerm, setSearchTerm
     return (
       <>
         <div 
-          className={`fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-in-out ${isMenuOpen || isSearchOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-[29px] transition-opacity duration-300 ease-in-out ${isMenuOpen || isSearchOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
           onClick={() => {
               setIsMenuOpen(false);
               setIsSearchOpen(false);
@@ -132,7 +132,7 @@ const Header: React.FC<HeaderProps> = ({ onViewChange, searchTerm, setSearchTerm
           }}
         />
   
-        <header className={`fixed top-6 left-0 right-0 z-50 flex justify-center transition-transform duration-500 ease-in-out ${isHeaderSidebar ? 'translate-x-[calc(50vw-240px)]' : ''}`}>
+        <header className={`fixed top-6 left-0 right-0 z-50 flex justify-center transition-transform duration-500 ease-in-out ${isHeaderSidebar ? 'translate-x-[calc(50vw-320px)]' : ''}`}>
           <div 
             className="relative w-[590px] bg-slate-800/70 backdrop-blur-md border border-slate-700 shadow-lg transition-[height] duration-300 ease-in-out"
             style={{ height: `${headerHeight}px` }}
