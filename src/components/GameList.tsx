@@ -84,19 +84,77 @@ const GameList: React.FC<GameListProps> = ({
     );
   }
 
+  // Grid'in düzgün görünmesi için toplam slot sayısını 4'ün katına yuvarlıyoruz.
   const MIN_SLOTS = 12;
-  const totalSlots = Math.max(games.length, MIN_SLOTS);
+  const rawTotal = Math.max(games.length, MIN_SLOTS);
+  const totalSlots = Math.ceil(rawTotal / 4) * 4; 
+  
   const slots = [...games, ...Array(Math.max(0, totalSlots - games.length)).fill(null)];
+  const isExiting = exitingId !== null;
+
+  // Satır sayıları
+  const mobileRowCount = totalSlots / 2;
+  const desktopRowCount = totalSlots / 4;
 
   return (
-    <div>
-      {/* GÜNCELLEME: "Gap Grid" Tekniği 
-         - gap-px: Kutular arasında 1px boşluk bırakır.
-         - bg-slate-700: Bu boşluklardan görünen renk (yani ızgara çizgilerinin rengi).
-         - border border-slate-700: En dış çerçeve.
-         - border-r ve border-b kaldırıldı çünkü gap ve dış border bunu hallediyor.
-      */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-slate-700 border border-slate-700">
+    <div className="relative">
+      
+      {/* --- GRID ÇİZGİLERİ KATMANI (Overlay) --- */}
+      <div className="absolute inset-0 pointer-events-none z-10">
+        
+        {/* 1. DİKEY ÇİZGİLER (Vertical Lines)
+            Animasyon: origin-top + scale-y-0 -> Aşağıdan yukarı doğru yok olur.
+        */}
+        {/* Sol Kenar */}
+        <div className={`absolute top-0 left-0 w-px h-full bg-slate-700 transition-transform duration-500 ease-in-out origin-top ${isExiting ? 'scale-y-0' : 'scale-y-100'}`} />
+        
+        {/* %25 (Sadece Desktop) */}
+        <div className={`hidden md:block absolute top-0 left-1/4 w-px h-full bg-slate-700 transition-transform duration-500 ease-in-out origin-top ${isExiting ? 'scale-y-0' : 'scale-y-100'}`} />
+        
+        {/* %50 (Hem Mobil Hem Desktop) */}
+        <div className={`absolute top-0 left-1/2 w-px h-full bg-slate-700 transition-transform duration-500 ease-in-out origin-top ${isExiting ? 'scale-y-0' : 'scale-y-100'}`} />
+        
+        {/* %75 (Sadece Desktop) */}
+        <div className={`hidden md:block absolute top-0 left-3/4 w-px h-full bg-slate-700 transition-transform duration-500 ease-in-out origin-top ${isExiting ? 'scale-y-0' : 'scale-y-100'}`} />
+        
+        {/* Sağ Kenar */}
+        <div className={`absolute top-0 right-0 w-px h-full bg-slate-700 transition-transform duration-500 ease-in-out origin-top ${isExiting ? 'scale-y-0' : 'scale-y-100'}`} />
+
+
+        {/* 2. YATAY ÇİZGİLER (Horizontal Lines)
+            Animasyon: origin-left + scale-x-0 -> Sağdan sola doğru yok olur.
+        */}
+        
+        {/* Üst Kenar */}
+        <div className={`absolute top-0 left-0 w-full h-px bg-slate-700 transition-transform duration-500 ease-in-out origin-left ${isExiting ? 'scale-x-0' : 'scale-x-100'}`} />
+
+        {/* Mobil Ara Çizgiler (2 Sütunlu Yapı İçin) */}
+        <div className="md:hidden">
+            {[...Array(mobileRowCount)].map((_, i) => (
+                <div 
+                    key={`mob-row-${i}`}
+                    className={`absolute left-0 w-full h-px bg-slate-700 transition-transform duration-500 ease-in-out origin-left ${isExiting ? 'scale-x-0' : 'scale-x-100'}`}
+                    style={{ top: `${((i + 1) / mobileRowCount) * 100}%` }}
+                />
+            ))}
+        </div>
+
+        {/* Desktop Ara Çizgiler (4 Sütunlu Yapı İçin) */}
+        <div className="hidden md:block">
+            {[...Array(desktopRowCount)].map((_, i) => (
+                <div 
+                    key={`desk-row-${i}`}
+                    className={`absolute left-0 w-full h-px bg-slate-700 transition-transform duration-500 ease-in-out origin-left ${isExiting ? 'scale-x-0' : 'scale-x-100'}`}
+                    style={{ top: `${((i + 1) / desktopRowCount) * 100}%` }}
+                />
+            ))}
+        </div>
+
+      </div>
+
+      {/* --- OYUNLAR GRID'İ --- */}
+      {/* Gap-0 kullanıyoruz çünkü çizgileri biz çizdik */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-0 bg-slate-900">
         {slots.map((game, index) => {
             const shouldHide = exitingId !== null && game?.id !== exitingId;
             const isSelected = exitingId !== null && game?.id === exitingId;
@@ -104,17 +162,17 @@ const GameList: React.FC<GameListProps> = ({
             return (
               <div
                 key={game ? game.id : `empty-${index}`}
-                // GÜNCELLEME:
-                // - border-t, border-l GİBİ sınıflar kaldırıldı. Çizgileri artık "gap" oluşturuyor.
-                // - bg-slate-900: Hücrenin rengi. Bu renk sayesinde arkadaki slate-700 sadece boşluklarda görünür.
-                className={`relative group bg-slate-900 aspect-square flex items-center justify-center overflow-hidden 
-                    ${isSelected ? 'z-10' : 'z-0'}
+                className={`
+                    relative group aspect-square flex items-center justify-center overflow-hidden 
+                    ${isSelected ? 'z-20' : 'z-0'}
                 `}
               >
-                {/* İÇERİK ANİMASYONU: Sabit kaldı */}
-                <div className={`w-full h-full flex items-center justify-center transition-all duration-500 ease-in-out transform ${
-                    shouldHide ? 'scale-0 opacity-0' : 'scale-100 opacity-100'
-                }`}>
+                {/* İçerik Animasyonu */}
+                <div className={`
+                    w-full h-full flex items-center justify-center 
+                    transition-all duration-500 ease-in-out transform
+                    ${shouldHide ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}
+                `}>
                     {game ? (
                       <GameCard
                         game={game}
