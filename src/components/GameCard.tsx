@@ -53,8 +53,6 @@ const GameCard: React.FC<GameCardProps> = ({ game, onViewDetails, onShowTooltip,
     }
   };
 
-  // Kenarlıklar ve boyutlandırma artık üst component (GameList) tarafından yönetiliyor.
-  // GameCard sadece içeriği (resim ve etkileşimleri) yönetir ve ebeveynini doldurur.
   return (
     <div
       className="w-full h-full flex items-center justify-center p-4 sm:p-8 cursor-pointer hover:bg-slate-800 transition-colors duration-300"
@@ -66,6 +64,8 @@ const GameCard: React.FC<GameCardProps> = ({ game, onViewDetails, onShowTooltip,
       <img
         src={game.image_url || 'https://images.pexels.com/photos/275033/pexels-photo-275033.jpeg?auto=compress&cs=tinysrgb&w=800'}
         alt={game.title}
+        // Benzersiz geçiş ismi veriyoruz
+        style={{ viewTransitionName: `game-image-${game.id}` } as React.CSSProperties}
         className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
       />
     </div>

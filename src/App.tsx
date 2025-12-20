@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { flushSync } from 'react-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Layout from './components/Layout';
 import GameList from './components/GameList';
@@ -14,10 +15,17 @@ interface TooltipData {
   publisher: string;
 }
 
+// Seçilen oyun için basit bir tip tanımı
+interface SelectedGame {
+  id: string;
+  title: string;
+  image_url: string | null;
+}
+
 function AppContent() {
   const { user, loading } = useAuth();
   const [currentView, setCurrentView] = useState<'home' | 'login' | 'register' | 'admin' | 'upload' | 'profile' | 'game-details'>('home');
-  const [selectedGameId, setSelectedGameId] = useState<string>('');
+  const [selectedGame, setSelectedGame] = useState<SelectedGame | null>(null);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [searchTerm, setSearchTerm] = useState('');
   const [tooltipVisible, setTooltipVisible] = useState(false);
@@ -26,28 +34,60 @@ function AppContent() {
   const [tooltipSide, setTooltipSide] = useState<'left' | 'right'>('right');
   const [isHeaderSidebar, setIsHeaderSidebar] = useState(false);
 
-  const handleGameSelect = (gameId: string) => {
+  const handleGameSelect = (game: SelectedGame) => {
     setTooltipVisible(false);
-    setSelectedGameId(gameId);
-    setCurrentView('game-details');
-    setIsHeaderSidebar(true);
+    
+    // View Transition API desteği varsa animasyonlu geçiş yap
+    if (document.startViewTransition) {
+      document.startViewTransition(() => {
+        flushSync(() => {
+          setSelectedGame(game);
+          setCurrentView('game-details');
+          setIsHeaderSidebar(true);
+        });
+      });
+    } else {
+      setSelectedGame(game);
+      setCurrentView('game-details');
+      setIsHeaderSidebar(true);
+    }
   };
 
   const handleViewChange = (view: string) => {
-    setCurrentView(view as any);
-    if (view === 'login') {
-      setAuthMode('login');
-    } else if (view === 'register') {
-      setAuthMode('register');
-    }
-    if (view !== 'game-details') {
-        setIsHeaderSidebar(false);
+    // View Transition ile sayfa değişimi
+    const updateView = () => {
+      setCurrentView(view as any);
+      if (view === 'login') {
+        setAuthMode('login');
+      } else if (view === 'register') {
+        setAuthMode('register');
+      }
+      if (view !== 'game-details') {
+          setIsHeaderSidebar(false);
+      }
+    };
+
+    if (document.startViewTransition) {
+      document.startViewTransition(() => {
+        flushSync(updateView);
+      });
+    } else {
+      updateView();
     }
   };
 
   const handleBackFromDetails = () => {
-    setCurrentView('home');
-    setIsHeaderSidebar(false);
+    if (document.startViewTransition) {
+        document.startViewTransition(() => {
+            flushSync(() => {
+                setCurrentView('home');
+                setIsHeaderSidebar(false);
+            });
+        });
+    } else {
+        setCurrentView('home');
+        setIsHeaderSidebar(false);
+    }
   }
 
   const updateTooltipSide = (xPosition: number) => {
@@ -111,20 +151,23 @@ function AppContent() {
         onViewChange={handleViewChange}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
-        onGameSelect={handleGameSelect}
+        onGameSelect={(id) => {
+            // Header search için uyumluluk
+            handleGameSelect({ id, title: '', image_url: null });
+        }}
       >
         {currentView === 'home' && (
           <GameList 
               onGameSelect={handleGameSelect} 
-              // searchTerm={searchTerm} satırı kaldırıldı
               onShowTooltip={handleShowTooltip}
               onHideTooltip={handleHideTooltip}
               onUpdateTooltipPosition={handleUpdateTooltipPosition}
           />
         )}
-        {currentView === 'game-details' && (
+        {currentView === 'game-details' && selectedGame && (
           <GameDetails 
-            gameId={selectedGameId} 
+            gameId={selectedGame.id} 
+            initialData={selectedGame}
             onBack={handleBackFromDetails} 
           />
         )}

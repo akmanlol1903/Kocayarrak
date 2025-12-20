@@ -54,9 +54,35 @@ const AccordionSection = React.memo(({ id, title, children, isOpen, onToggle }: 
   </div>
 ));
 
-const GameDetails: React.FC<{ gameId: string; onBack: () => void; }> = ({ gameId, onBack }) => {
+interface GameDetailsProps {
+  gameId: string;
+  initialData?: { id: string; title: string; image_url: string | null };
+  onBack: () => void;
+}
+
+const GameDetails: React.FC<GameDetailsProps> = ({ gameId, initialData, onBack }) => {
   const { user } = useAuth();
-  const [game, setGame] = useState<Game | null>(null);
+  
+  // State'i initialData ile başlatıyoruz ki resim hemen var olsun
+  const [game, setGame] = useState<Game | null>(
+    initialData 
+      ? ({ 
+          ...initialData, 
+          description: '', 
+          category: '', 
+          file_url: '', 
+          screenshots: [], 
+          download_count: 0, 
+          rating: 0, 
+          created_by: '', 
+          created_at: '',
+          developer: null,
+          publisher: null,
+          steam_appid: null
+        } as unknown as Game) 
+      : null
+  );
+
   const [steamDetails, setSteamDetails] = useState<SteamDetails | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -167,14 +193,13 @@ const GameDetails: React.FC<{ gameId: string; onBack: () => void; }> = ({ gameId
     }
   };
 
-
-  if (loading) return <div className="flex justify-center items-center h-screen"><Loader2 className="h-12 w-12 animate-spin text-purple-500" /></div>;
+  // initialData sayesinde game varsa render başlar
+  if (loading && !game) return <div className="flex justify-center items-center h-screen"><Loader2 className="h-12 w-12 animate-spin text-purple-500" /></div>;
   if (error) return <div className="text-center text-red-400 p-8">{error}</div>;
   if (!game) return null;
 
   const screenshots = game.screenshots || [];
   const hasScreenshots = screenshots.length > 0;
-
 
   return (
     <div className="bg-slate-900 text-white min-h-screen">
@@ -189,7 +214,7 @@ const GameDetails: React.FC<{ gameId: string; onBack: () => void; }> = ({ gameId
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <p className="text-gray-500">No screenshots available.</p>
+                    {loading ? <Loader2 className="animate-spin text-purple-500" /> : <p className="text-gray-500">No screenshots available.</p>}
                   </div>
                 )}
                 <div className="absolute top-5 left-5">
@@ -223,29 +248,47 @@ const GameDetails: React.FC<{ gameId: string; onBack: () => void; }> = ({ gameId
             {/* Sağ Sütun (Bilgiler) */}
             <div className="lg:h-screen lg:overflow-y-auto border-l border-black bg-slate-900 lg:pt-[100px] lg:px-6 lg:pb-6 p-6">
                 <div>
-                    <img src={game.image_url || 'https://via.placeholder.com/1280x720'} alt={game.title} className="w-full h-auto object-cover" />
+                    <img 
+                        src={game.image_url || 'https://via.placeholder.com/1280x720'} 
+                        alt={game.title} 
+                        // BURASI KRİTİK: GameCard'daki aynı ID ile viewTransitionName veriyoruz.
+                        style={{ viewTransitionName: `game-image-${gameId}` } as React.CSSProperties}
+                        className="w-full h-auto object-cover border border-slate-700"
+                    />
                     <div className="border-b border-slate-700 mt-2 pb-2">
                         <h1 className="text-[32px] font-black uppercase tracking-wider mb-2">{game.title}</h1>
                         <div className="text-slate-400 text-sm">
-                            {(steamDetails?.release_date?.date || game.created_at) && (
-                                <p className="mb-2">
-                                    Çıkış Tarihi: {steamDetails?.release_date?.date 
-                                        ? steamDetails.release_date.date 
-                                        : new Date(game.created_at).toLocaleDateString()}
-                                </p>
+                            {/* Veriler yükleniyorsa iskelet göster */}
+                            {loading && !steamDetails ? (
+                                <div className="animate-pulse flex space-x-4"><div className="h-4 bg-slate-700 rounded w-3/4"></div></div>
+                            ) : (
+                                <>
+                                    {(steamDetails?.release_date?.date || game.created_at) && (
+                                        <p className="mb-2">
+                                            Çıkış Tarihi: {steamDetails?.release_date?.date 
+                                                ? steamDetails.release_date.date 
+                                                : new Date(game.created_at).toLocaleDateString()}
+                                        </p>
+                                    )}
+                                    <div>
+                                        {game.developer && game.developer.length > 0 && <p>Geliştirici: {game.developer.join(', ')}</p>}
+                                        {game.publisher && game.publisher.length > 0 && <p>Yayıncı: {game.publisher.join(', ')}</p>}
+                                        {(!game.developer || game.developer.length === 0) && (!game.publisher || game.publisher.length === 0) && <p>Yükleyen: {creatorName}</p>}
+                                    </div>
+                                </>
                             )}
-                            <div>
-                                {game.developer && game.developer.length > 0 && <p>Geliştirici: {game.developer.join(', ')}</p>}
-                                {game.publisher && game.publisher.length > 0 && <p>Yayıncı: {game.publisher.join(', ')}</p>}
-                                {(!game.developer || game.developer.length === 0) && (!game.publisher || game.publisher.length === 0) && <p>Yükleyen: {creatorName}</p>}
-                            </div>
                         </div>
                     </div>
-                    <p className="text-slate-300 leading-relaxed text-sm mt-6">{steamDetails?.short_description || game.description}</p>
+                    
+                    {/* Açıklama ve diğer bölümler */}
+                    <p className="text-slate-300 leading-relaxed text-sm mt-6">
+                        {loading && !steamDetails && !game.description ? "Loading details..." : (steamDetails?.short_description || game.description)}
+                    </p>
+
                     <div className="border-t border-slate-700 mt-6">
                         <div className="relative group cursor-pointer overflow-hidden border-b border-gray-700">
                             <div className="absolute bottom-0 left-0 w-full h-0 bg-black group-hover:h-full transition-all duration-300 ease-in-out z-0"></div>
-                            <button onClick={handleDownload} className="relative z-10 w-full flex justify-between items-center p-4">
+                            <button onClick={handleDownload} disabled={loading && !game.file_url} className="relative z-10 w-full flex justify-between items-center p-4 disabled:opacity-50">
                                 <span className="font-bold text-sm text-white transition-colors">DOWNLOAD</span>
                                 <Download className="h-5 w-5 text-gray-400 group-hover:text-white transition-colors" />
                             </button>

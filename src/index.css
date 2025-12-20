@@ -26,3 +26,23 @@ body {
 body {
   -ms-overflow-style: none;
 }
+
+/* View Transitions Ayarları */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.4s;
+}
+
+/* Dinamik resim geçişleri için grup ayarları */
+::view-transition-group(game-image-*) {
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-old(game-image-*),
+::view-transition-new(game-image-*) {
+  /* Resimlerin boyutları değişirken bozulmaması için */
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
